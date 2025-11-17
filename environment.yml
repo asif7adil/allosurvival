@@ -1,0 +1,29 @@
+
+name: hspc
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.12
+  - pip
+  - ruff
+  - mypy
+  - loguru
+  - jupyter
+  - matplotlib=
+  - seaborn
+  - numpy
+  - pandas
+  - pyarrow
+  - openpyxl
+  - scikit-learn
+  - scanpy
+  - python-igraph
+  - leidenalg
+  - pydeseq2
+  - python-dotenv
+  - mkdocs
+  - pyprojroot
+  - decoupler-py
+  - pip:
+    - marsilea
