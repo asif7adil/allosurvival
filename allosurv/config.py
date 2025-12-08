@@ -16,7 +16,6 @@ class DefaultConfig:
     data_interim: PathLike
     data_external: PathLike
     plots: PathLike
-    model_dl: PathLike
     model_ml: PathLike
 
 
@@ -30,5 +29,6 @@ def get_config():
     """
     with open(here('config.yml'), encoding='utf-8') as f:
         data = yaml.safe_load(f)
+
 
     return DefaultConfig(**data['default'])
