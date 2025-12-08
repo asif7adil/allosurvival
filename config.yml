@@ -5,5 +5,4 @@ default:
   data_interim: "data/interim"
   data_external: "data/external"
   plots: "reports/figures"
-  model_dl: "models/DL"
   model_ml: "models/ML"
