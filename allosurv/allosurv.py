@@ -42,6 +42,13 @@ from collections import Counter
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from sdv.metadata import SingleTableMetadata, Metadata
+from sdv.single_table import GaussianCopulaSynthesizer
+from sdv.sampling import Condition
+from sdv.evaluation.single_table import run_diagnostic, evaluate_quality
+
+
+
 import shap
 shap.initjs()
 warnings.filterwarnings('ignore')
@@ -550,3 +557,45 @@ def plot_performance_curves(curve_data_list, figsize=(15, 5), save_prefix=None, 
         if save_prefix:
             plt.savefig(f'{save_prefix}_combined.{filetype}', dpi=300, bbox_inches='tight')
         plt.show()
+        
+############################################################# Synthetic Data Generation and Evaluation Functions ###########################################################################
+# evaluates a trained horizon model against a synthetic (features + target) replicate
+def test_model_on_synthetic(horizon, synthetic_data, best_models):
+    model_path = best_models[horizon]
+    best_model = joblib.load(model_path)
+
+    X_synthetic = synthetic_data.drop(columns=['target'])
+    y_synthetic = synthetic_data['target']
+
+    y_prob = best_model.predict_proba(X_synthetic)[:, 1]
+    y_pred = (y_prob >= 0.5).astype(int)
+
+    return evaluate(y_synthetic, y_prob, y_pred)
+
+
+
+def build_horizon_synthetic(hname, num_rows=1000, random_state=42, horizon_datasets=None):
+    """Fit ONE synthesizer on the real features+target for this horizon, then draw a
+    class-balanced synthetic set via conditional sampling from that single joint model.
+    Unlike per-class refitting, the feature<->target relationship here is exactly what the
+    full real cohort supports -- nothing is hard-coded or borrowed from a tiny subset."""
+    df_h = horizon_datasets[hname]
+
+    meta = SingleTableMetadata()
+    meta.detect_from_dataframe(df_h)
+    meta.update_column('target', sdtype='categorical')
+
+    synth_h = GaussianCopulaSynthesizer(meta)
+    synth_h.fit(df_h)
+
+    prevalence = df_h['target'].mean()
+    n_pos = int(round(num_rows * prevalence))
+    n_neg = num_rows - n_pos
+    conditions = [
+        Condition(num_rows=n_pos, column_values={'target': 1}),
+        Condition(num_rows=n_neg, column_values={'target': 0}),
+    ]
+    synthetic = synth_h.sample_from_conditions(conditions).sample(frac=1, random_state=random_state).reset_index(drop=True)
+    return synthetic, synth_h
+
+
