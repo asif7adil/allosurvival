@@ -6,6 +6,7 @@ import sys
 import glob
 
 
+shap.initjs()
 
 # remove warnings
 import warnings
@@ -48,9 +49,6 @@ from sdv.sampling import Condition
 from sdv.evaluation.single_table import run_diagnostic, evaluate_quality
 
 
-
-import shap
-shap.initjs()
 warnings.filterwarnings('ignore')
 
 def make_preprocessor(X):
